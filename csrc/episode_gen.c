@@ -30,15 +30,10 @@ int main(int argc, char **argv) {
     snprintf(cmd, sizeof(char) * 200, "mkdir -p %s", nest);
     system(cmd);
 
-    // left video
     snprintf(nest+r, sizeof(char) * (200-r), "/left.perception_interface.camera.state.mp4");
     (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
-
-    // center video
     snprintf(nest+r, sizeof(char) * (200-r), "/middle.perception_interface.camera.state.mp4");
     (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
-
-    // right video
     snprintf(nest+r, sizeof(char) * (200-r), "/right.perception_interface.camera.state.mp4");
     (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
   }
