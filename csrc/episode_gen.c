@@ -32,15 +32,15 @@ int main(int argc, char **argv) {
 
     // left video
     snprintf(nest+r, sizeof(char) * (200-r), "/left.perception_interface.camera.state.mp4");
-    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 1000);
+    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
 
     // center video
     snprintf(nest+r, sizeof(char) * (200-r), "/middle.perception_interface.camera.state.mp4");
-    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 1000);
+    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
 
     // right video
     snprintf(nest+r, sizeof(char) * (200-r), "/right.perception_interface.camera.state.mp4");
-    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 1000);
+    (void) generate_rv(nest, -1, -1, -1, GOP, NULL, NULL, 995 + rand()%10);
   }
   
   return 0;
