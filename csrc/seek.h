@@ -2,6 +2,7 @@
 #define SEEK_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -24,12 +25,6 @@ struct dec_state {
   // frame state
   AVFrame  *frame;
   AVPacket *pkt;
-
-  // pointer to the video frame
-  int cursor;
-
-  AVRational time_base;
-  AVRational frame_rate;
 };
 
 /* init decoder */
@@ -42,8 +37,12 @@ void dec_free(dec_state_t *ctx);
  * both random and sequentil 
  * seek, this will intelligently
  * choose to find the next keyframe
- * or to continue decoding */
-bool seek_pts(dec_state_t *ctx, int pts);
-bool seek_frame(dec_state_t *ctx, int frame_no);
+ * or to continue decoding 
+ * return val:
+ *   -1 => err
+ *   0  => warm seek (O(G))
+ *   1  => cold seek (O(logK + G))
+ */
+int seek_pts(dec_state_t *ctx, int64_t pts);
 
 #endif

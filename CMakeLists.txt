@@ -13,3 +13,7 @@ add_executable(episode_gen
 )
 
 target_link_libraries(episode_gen PkgConfig::FFMPEG)
+
+add_library(${PROJECT_NAME} SHARED csrc/seek.c)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
