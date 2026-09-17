@@ -10,6 +10,13 @@
 #include <libavutil/dict.h>
 
 typedef struct dec_state dec_state_t;
+typedef enum decode_status decode_status_t;
+
+enum decode_status {
+  DECODE_OK,
+  DECODE_EOF,
+  DECODE_ERROR
+};
 
 /* unique decoder state
  * initialized for one video */

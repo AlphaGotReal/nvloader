@@ -72,24 +72,32 @@ void dec_free(dec_state_t *ctx) {
   free(ctx);
 }
 
-static bool decode_next_frame(dec_state_t *ctx) {
+static decode_status_t decode_next_frame(dec_state_t *ctx) {
   while (true) {
     int ret = avcodec_receive_frame(ctx->dec, ctx->frame);
     if (ret == 0)
-      return true;
+      return DECODE_OK;
+    if (ret == AVERROR_EOF)
+      return DECODE_EOF;
     if (ret != AVERROR(EAGAIN))
-      return false;
+      return DECODE_ERROR;
     while ((ret = av_read_frame(ctx->fmt, ctx->pkt)) >= 0) {
       if (ctx->pkt->stream_index == ctx->video_stream_idx) {
         if (avcodec_send_packet(ctx->dec, ctx->pkt) < 0) {
           av_packet_unref(ctx->pkt);
-          return false;
+          return DECODE_ERROR;
         }
-      }av_packet_unref(ctx->pkt);
+      }
+      av_packet_unref(ctx->pkt);
       break;
     }
+    if (ret == AVERROR_EOF) {
+      /* flush decoder as EOF is not the end */
+      avcodec_send_packet(ctx->dec, NULL);
+      continue;
+    }
     if (ret < 0)
-      return false;
+      return DECODE_ERROR;
   }
 }
 
@@ -124,12 +132,15 @@ int seek_pts(dec_state_t *ctx, int64_t pts) {
   // decode forward
 decode:
   while (true) {
-    if (!decode_next_frame(ctx))
-      return -1;
+    decode_status_t st = decode_next_frame(ctx);
+    if (st == DECODE_ERROR)
+        return -1;
+    if (st == DECODE_EOF)
+        break;
     if (ctx->frame->pts == AV_NOPTS_VALUE)
-      continue;
+        continue;
     if (ctx->frame->pts >= pts)
-      break;
+        break;
   }
 
   return seek_ret;
