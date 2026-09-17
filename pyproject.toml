@@ -3,7 +3,7 @@ name = "nvloader"
 version = "0.1.0"
 description = "video loading using nvdec"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
-    "ipython>=9.17.1",
+    "ipython>=8.39.0",
 ]
