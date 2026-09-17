@@ -24,7 +24,7 @@ dec_state_t *dec_open(const char *video_f) {
   }
 
   ctx->stream = ctx->fmt->streams[ctx->video_stream_idx];
-  const AVCodec *codec = avcodec_find_decoder(ctx->stream->codecpar->codec_id);
+  const AVCodec *codec = avcodec_find_decoder_by_name("h264_cuvid");
 
   if (!codec) {
     fprintf(stderr, "decoder not found\n");
@@ -62,7 +62,7 @@ fail:
   return NULL;
 }
 
-void dec_close(dec_state_t *ctx) {
+void dec_free(dec_state_t *ctx) {
   if (!ctx)
     return;
   av_frame_free(&ctx->frame);
@@ -108,7 +108,7 @@ int seek_pts(dec_state_t *ctx, int64_t pts) {
     if (pts >= cur_pts) {
       int64_t delta = pts - cur_pts;
       // heuristic: if within 1 sec continue decoding forward
-      int64_t threshold = av_rescale_q(1, (AVRational){1, 1}, ctx->stream->time_base);
+      int64_t threshold = av_rescale_q(3, (AVRational){1, 1}, ctx->stream->time_base);
       if (delta <= threshold) {
         seek_ret = 0; // warm
         goto decode;
