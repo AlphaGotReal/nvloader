@@ -4,7 +4,8 @@
 /* generates a h264 video where 
  * every pixel is sampled from 
  * a discrete uniform distribution 
- * U(0, 255) */
+ * U(0, 255) with a continuous time
+ * jitter sampled from U(0, 5) ms */
 bool generate_rv(
     const char *file,
     int width,
