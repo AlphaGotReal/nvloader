@@ -1,5 +1,10 @@
+#include <stdio.h>
+#include <cuda_runtime.h>
+
 #include "nv12_to_rgb.cuh"
 
+// cuda kernel to convert nv12 to rgb
+// so that everything remains in VRAM itself
 __global__ void nv12_to_rgb_kernel(
     const uint8_t *y_plane,
     const uint8_t *uv_plane,
@@ -44,7 +49,7 @@ __global__ void nv12_to_rgb_kernel(
   rgb[idx + 2] = b;
 }
 
-void nv12_to_rgb(
+extern "C" void nv12_to_rgb(
     const uint8_t *y_plane,
     const uint8_t *uv_plane,
     int y_pitch,
@@ -67,4 +72,15 @@ void nv12_to_rgb(
       rgb,
       width,
       height);
+
+  cudaError_t err = cudaGetLastError();
+  if (err != cudaSuccess) {
+    fprintf(stderr, "nv12_to_rgb_kernel launch failed: %s\n", cudaGetErrorString(err));
+  }
+
+  // blocks CPU so that GPU finishes before
+//   err = cudaDeviceSynchronize();
+//   if (err != cudaSuccess) {
+//     fprintf(stderr, "kernel execution failed: %s\n", cudaGetErrorString(err));
+//   }
 }
