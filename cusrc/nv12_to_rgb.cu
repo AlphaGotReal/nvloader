@@ -56,7 +56,8 @@ extern "C" void nv12_to_rgb(
     int uv_pitch,
     uint8_t *rgb,
     int width,
-    int height) {
+    int height,
+    cudaStream_t stream) {
 
   // 16 * 16 = 256 threads/block 
   // good enough for a single pass kernel
@@ -64,7 +65,8 @@ extern "C" void nv12_to_rgb(
   dim3 grid(
       (width  + block.x - 1) / block.x,
       (height + block.y - 1) / block.y);
-  nv12_to_rgb_kernel<<<grid, block>>>(
+
+  nv12_to_rgb_kernel<<<grid, block, 0, stream>>>(
       y_plane,
       uv_plane,
       y_pitch,
