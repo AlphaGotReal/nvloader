@@ -55,11 +55,8 @@ dec_state_t *dec_open(const char *video_f) {
 
   // cuda alloc
   cudaStreamCreate(&ctx->cuda_stream);
-  ctx->rgb_size =
-      ctx->dec->width *
-      ctx->dec->height *
-      3;
-  cudaMalloc(&ctx->rgb_buffer, ctx->rgb_size); // device memory alloc
+  ctx->rgb_size = ctx->dec->width * ctx->dec->height * 3;
+  cudaMalloc((void **)&ctx->rgb_buffer, ctx->rgb_size); // device memory alloc
 
   ctx->frame = av_frame_alloc();
   ctx->pkt   = av_packet_alloc();
@@ -180,7 +177,28 @@ decode:
     ctx->frame->height,
     ctx->cuda_stream);
 
-  // printf("%s\n", av_get_pix_fmt_name(ctx->frame->format));  
+  // download the rgb frames into CPU
+//   uint8_t *host = malloc(ctx->rgb_size);
+//   cudaMemcpy(
+//     host,
+//     ctx->rgb_buffer,
+//     ctx->rgb_size,
+//     cudaMemcpyDeviceToHost
+//   );
+
+//   printf("%s\n", av_get_pix_fmt_name(ctx->frame->format));  
+
+//   AVHWFramesContext *hw =
+//     (AVHWFramesContext *)ctx->frame->hw_frames_ctx->data;
+// 
+//   printf("hw format=%s\n", av_get_pix_fmt_name(hw->sw_format));
+
+//   printf("data0=%p\n", ctx->frame->data[0]);
+//   printf("data1=%p\n", ctx->frame->data[1]);
+//   printf("ls0=%d\n", ctx->frame->linesize[0]);
+//   printf("ls1=%d\n", ctx->frame->linesize[1]);
+//   printf("format=%s\n",
+//          av_get_pix_fmt_name(ctx->frame->format));
 
   return seek_ret;
 }

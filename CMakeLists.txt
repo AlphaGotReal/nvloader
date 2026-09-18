@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_CUDA_ARCHITECTURES 120) # will change this for h200
 
+find_package(CUDAToolkit REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale)
 
@@ -25,7 +26,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC
     PkgConfig::FFMPEG
-    cudart)
+    CUDA::cudart)
 
 set_target_properties(${PROJECT_NAME}
   PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
