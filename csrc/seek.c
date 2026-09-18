@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "seek.h"
+#include "nv12_to_rgb.cuh"
 
 dec_state_t *dec_open(const char *video_f) {
 
@@ -35,22 +36,31 @@ dec_state_t *dec_open(const char *video_f) {
   if (!ctx->dec)
     goto fail;
 
+  // cuda device
   if (av_hwdevice_ctx_create(&ctx->hw_device_ctx, AV_HWDEVICE_TYPE_CUDA, NULL, NULL, 0) < 0) {
     fprintf(stderr, "failed to create CUDA device\n");
     goto fail;
   }
 
   ctx->dec->hw_device_ctx = av_buffer_ref(ctx->hw_device_ctx);
-
   if (avcodec_parameters_to_context(ctx->dec, ctx->stream->codecpar) < 0) {
     fprintf(stderr, "failed to copy codec params\n");
     goto fail;
   }
 
- if (avcodec_open2(ctx->dec, codec, NULL) < 0) {
+  if (avcodec_open2(ctx->dec, codec, NULL) < 0) {
     fprintf(stderr, "failed to open decoder\n");
     goto fail;
   }
+
+  // cuda alloc
+  cudaStreamCreate(&ctx->cuda_stream);
+  ctx->rgb_size =
+      ctx->dec->width *
+      ctx->dec->height *
+      3;
+  cudaMalloc(&ctx->rgb_buffer, ctx->rgb_size); // device memory alloc
+
   ctx->frame = av_frame_alloc();
   ctx->pkt   = av_packet_alloc();
   if (!ctx->frame || !ctx->pkt)
@@ -59,6 +69,8 @@ dec_state_t *dec_open(const char *video_f) {
 
 fail:
   if (ctx) {
+    cudaFree(ctx->rgb_buffer);
+    cudaStreamDestroy(ctx->cuda_stream);
     av_frame_free(&ctx->frame);
     av_packet_free(&ctx->pkt);
     avcodec_free_context(&ctx->dec);
@@ -66,6 +78,7 @@ fail:
       av_buffer_unref(&ctx->hw_device_ctx);
     if (ctx->fmt)
       avformat_close_input(&ctx->fmt);
+
     free(ctx);
   }
   return NULL;
@@ -74,6 +87,9 @@ fail:
 void dec_free(dec_state_t *ctx) {
   if (!ctx)
     return;
+
+  cudaFree(ctx->rgb_buffer);
+  cudaStreamDestroy(ctx->cuda_stream);
   av_frame_free(&ctx->frame);
   av_packet_free(&ctx->pkt);
   avcodec_free_context(&ctx->dec);
@@ -153,7 +169,18 @@ decode:
         break;
   }
 
-  printf("%s\n", av_get_pix_fmt_name(ctx->frame->format));  
+  // store rgb frames in VRAM
+  nv12_to_rgb(
+    (const uint8_t *)ctx->frame->data[0],
+    (const uint8_t *)ctx->frame->data[1],
+    ctx->frame->linesize[0],
+    ctx->frame->linesize[1],
+    ctx->rgb_buffer,
+    ctx->frame->width,
+    ctx->frame->height,
+    ctx->cuda_stream);
+
+  // printf("%s\n", av_get_pix_fmt_name(ctx->frame->format));  
 
   return seek_ret;
 }

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <cuda_runtime.h> 
 
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -35,6 +36,11 @@ struct dec_state {
 
   // hardware decoder state
   AVBufferRef *hw_device_ctx;
+
+  // cuda 
+  uint8_t *rgb_buffer; // __device__ memory
+  size_t rgb_size;
+  cudaStream_t cuda_stream; // sync queue
 };
 
 /* init decoder */
