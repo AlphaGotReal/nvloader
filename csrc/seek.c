@@ -35,12 +35,19 @@ dec_state_t *dec_open(const char *video_f) {
   if (!ctx->dec)
     goto fail;
 
+  if (av_hwdevice_ctx_create(&ctx->hw_device_ctx, AV_HWDEVICE_TYPE_CUDA, NULL, NULL, 0) < 0) {
+    fprintf(stderr, "failed to create CUDA device\n");
+    goto fail;
+  }
+
+  ctx->dec->hw_device_ctx = av_buffer_ref(ctx->hw_device_ctx);
+
   if (avcodec_parameters_to_context(ctx->dec, ctx->stream->codecpar) < 0) {
     fprintf(stderr, "failed to copy codec params\n");
     goto fail;
   }
 
-  if (avcodec_open2(ctx->dec, codec, NULL) < 0) {
+ if (avcodec_open2(ctx->dec, codec, NULL) < 0) {
     fprintf(stderr, "failed to open decoder\n");
     goto fail;
   }
@@ -55,6 +62,8 @@ fail:
     av_frame_free(&ctx->frame);
     av_packet_free(&ctx->pkt);
     avcodec_free_context(&ctx->dec);
+    if (ctx->hw_device_ctx)
+      av_buffer_unref(&ctx->hw_device_ctx);
     if (ctx->fmt)
       avformat_close_input(&ctx->fmt);
     free(ctx);
@@ -69,6 +78,7 @@ void dec_free(dec_state_t *ctx) {
   av_packet_free(&ctx->pkt);
   avcodec_free_context(&ctx->dec);
   avformat_close_input(&ctx->fmt);
+  av_buffer_unref(&ctx->hw_device_ctx);
   free(ctx);
 }
 
@@ -142,6 +152,8 @@ decode:
     if (ctx->frame->pts >= pts)
         break;
   }
+
+  printf("%s\n", av_get_pix_fmt_name(ctx->frame->format));  
 
   return seek_ret;
 }

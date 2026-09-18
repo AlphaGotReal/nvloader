@@ -32,6 +32,9 @@ struct dec_state {
   // frame state
   AVFrame  *frame;
   AVPacket *pkt;
+
+  // hardware decoder state
+  AVBufferRef *hw_device_ctx;
 };
 
 /* init decoder */
