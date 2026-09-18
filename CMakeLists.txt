@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
-project(nvloader C)
+project(nvloader LANGUAGES C CUDA)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_CUDA_ARCHITECTURES 120) # will change this for h200
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil libswscale)
@@ -13,9 +15,20 @@ add_executable(episode_gen
   csrc/random_video.c)
 target_link_libraries(episode_gen PkgConfig::FFMPEG)
 
-add_library(${PROJECT_NAME} SHARED csrc/seek.c)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::FFMPEG)
+add_library(${PROJECT_NAME} SHARED
+  csrc/seek.c
+  cusrc/nv12_to_rgb.cu)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/csrc
+    ${CMAKE_CURRENT_SOURCE_DIR}/cusrc)
+target_link_libraries(${PROJECT_NAME} 
+  PUBLIC
+    PkgConfig::FFMPEG
+    cudart)
+
+set_target_properties(${PROJECT_NAME}
+  PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # tests
 add_executable(test_sequential_seek
