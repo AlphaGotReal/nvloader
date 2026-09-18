@@ -8,4 +8,5 @@ dependencies = [
     "ipython>=8.39.0",
     "torch==2.7.1",
     "torchvision>=0.22.1",
+    "tqdm>=4.70.1",
 ]

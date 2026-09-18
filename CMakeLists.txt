@@ -4,7 +4,7 @@ project(nvloader LANGUAGES C CUDA)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(CMAKE_CUDA_ARCHITECTURES 120) # will change this for h200
+set(CMAKE_CUDA_ARCHITECTURES 90)
 
 find_package(CUDAToolkit REQUIRED)
 find_package(PkgConfig REQUIRED)
