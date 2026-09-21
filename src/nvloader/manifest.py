@@ -48,7 +48,7 @@ class Sampler:
                 if self.lagging_pts[it.video_f][0] > a_pts:
                     return None
                 got = False
-                for t in range(1, self.lagging_pts[it.video_f]):
+                for t in range(1, len(self.lagging_pts[it.video_f])):
                     if self.lagging_pts[it.video_f][t] > a_pts:
                         M[it.video_f] = self.lagging_pts[it.video_f][t-1]
                         got = True
@@ -90,8 +90,10 @@ def generate(mission_dir):
         manifest[ep_idx] = {}
 
         s = Sampler([left, middle, right], 0)
-        for t, sample in tqdm.tqdm(enumerate(s)):
+        t = 0
+        for sample in tqdm.tqdm(enumerate(s)):
             if sample is not None:
-                manifest[ep_idx][t] = s
+                manifest[ep_idx][t] = sample
+                t += 1
 
     return manifest
