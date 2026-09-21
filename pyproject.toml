@@ -1,6 +1,6 @@
 [build-system]
-requires = ["scikit-build-core>=0.10", "pybind11", "torch"]
 build-backend = "scikit_build_core.build"
+requires = ["scikit-build-core>=0.10", "pybind11", "torch==2.7.1"]
 
 [project]
 name = "nvloader"
