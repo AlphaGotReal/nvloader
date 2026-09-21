@@ -4,6 +4,18 @@
 #include "seek.h"
 #include "nv12_to_rgb.cuh"
 
+#include <unistd.h>
+#include <time.h>
+
+double get_wall_time() {
+  struct timespec time;
+  clock_gettime(CLOCK_MONOTONIC, &time);
+  return (double)time.tv_sec + (double)time.tv_nsec * 1e-9;
+}
+
+#define cnow (clock() * 1e-6)
+#define rnow get_wall_time()
+
 dec_state_t *dec_open(const char *video_f) {
 
   dec_state_t *ctx = (dec_state_t *) malloc(sizeof(dec_state_t));
@@ -147,13 +159,17 @@ int seek_pts(dec_state_t *ctx, int64_t pts) {
     }
   }
 
+  double b = rnow;
   // jump to nearest keyframe (optionally)
   if (av_seek_frame(ctx->fmt, ctx->video_stream_idx, pts, AVSEEK_FLAG_BACKWARD) < 0) {
     return -1;
   }avcodec_flush_buffers(ctx->dec);
+  printf("seek : %.2fms", (rnow - b) * 1000);
 
   // decode forward
-decode:
+decode: {
+
+  double s = rnow;
   while (true) {
     decode_status_t st = decode_next_frame(ctx);
     if (st == DECODE_ERROR)
@@ -165,18 +181,20 @@ decode:
     if (ctx->frame->pts >= pts)
         break;
   }
+  printf("decode forward: %2fms\n", (rnow - s) * 1000);
 
+}
   // store rgb frames in VRAM
-  nv12_to_rgb(
-    (const uint8_t *)ctx->frame->data[0],
-    (const uint8_t *)ctx->frame->data[1],
-    ctx->frame->linesize[0],
-    ctx->frame->linesize[1],
-    ctx->rgb_buffer,
-    ctx->frame->width,
-    ctx->frame->height,
-    ctx->cuda_stream);
-
+//   nv12_to_rgb(
+//     (const uint8_t *)ctx->frame->data[0],
+//     (const uint8_t *)ctx->frame->data[1],
+//     ctx->frame->linesize[0],
+//     ctx->frame->linesize[1],
+//     ctx->rgb_buffer,
+//     ctx->frame->width,
+//     ctx->frame->height,
+//     ctx->cuda_stream);
+// 
   // download the rgb frames into CPU
 //   uint8_t *host = malloc(ctx->rgb_size);
 //   cudaMemcpy(
@@ -192,7 +210,7 @@ decode:
 //     (AVHWFramesContext *)ctx->frame->hw_frames_ctx->data;
 // 
 //   printf("hw format=%s\n", av_get_pix_fmt_name(hw->sw_format));
-
+// 
 //   printf("data0=%p\n", ctx->frame->data[0]);
 //   printf("data1=%p\n", ctx->frame->data[1]);
 //   printf("ls0=%d\n", ctx->frame->linesize[0]);

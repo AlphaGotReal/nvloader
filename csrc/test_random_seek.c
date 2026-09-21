@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
   srand((unsigned)time(NULL));
 
-  const int N = 1000;
+  const int N = 30;
   int warm = 0;
   int cold = 0;
 
