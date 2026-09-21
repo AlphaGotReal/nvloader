@@ -76,7 +76,7 @@ def generate(mission_dir):
     }
     """ 
 
-    manifest = {}
+    manifest = []
 
     for ep_idx, ep in enumerate(os.listdir(mission_dir)):
 
@@ -87,13 +87,13 @@ def generate(mission_dir):
         middle = PTSVideoIter(os.path.join(data, "middle.perception_interface.camera.state.mp4"))
         right = PTSVideoIter(os.path.join(data, "right.perception_interface.camera.state.mp4"))
 
-        manifest[ep_idx] = {}
+        ep_manifest = []
 
         s = Sampler([left, middle, right], 0)
-        t = 0
-        for sample in tqdm.tqdm(enumerate(s)):
+        for sample in tqdm.tqdm(s):
             if sample is not None:
-                manifest[ep_idx][t] = sample
-                t += 1
+                ep_manifest.append(sample)
+
+        manifest.append(ep_manifest)
 
     return manifest

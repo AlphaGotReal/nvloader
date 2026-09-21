@@ -10,8 +10,8 @@ import argparse
 from nvloader import manifest
 
 def main(args):
+    M = manifest.generate(args.mission)
     with open(os.path.join(args.mission, "manifest.json"), "w") as f:
-        M = manifest.generate(args.mission)
         json.dump(M, f, indent=2)
     return M
 
