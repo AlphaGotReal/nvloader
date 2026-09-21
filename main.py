@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 
 from IPython import embed
 import argparse
@@ -9,14 +10,17 @@ import argparse
 from nvloader import manifest
 
 def main(args):
-    return manifest.generate(args.output)
+    with open(os.path.join(args.mission, "manifest.json"), "w") as f:
+        M = manifest.generate(args.mission)
+        json.dump(M, f, indent=2)
+    return M
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--cont", action="store_true")
     parser.add_argument("--gvar", default="gvar")
-    parser.add_argument("--output")
+    parser.add_argument("--mission")
     args = parser.parse_args()
 
     _gvar = args.gvar
